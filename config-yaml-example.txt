@@ -1,0 +1,14 @@
+ldap:
+  url: "ldap://<ip>:389"
+  username: "username"
+  password: "passwd"
+  base_dn: "dc=<example>,dc=com"
+
+  search:
+    filter: "(objectClass=*)"
+    page_size: 1000
+    attributes:
+      - "*"
+
+output:
+  file: "ldap_dump.ldif"
