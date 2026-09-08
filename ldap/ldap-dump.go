@@ -1,8 +1,10 @@
 package ldap
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
+	"unicode/utf8"
 
 	"github.com/go-ldap/ldap/v3"
 
@@ -10,13 +12,13 @@ import (
 )
 
 func Dump(cfg *config.Config) error {
+
 	conn, err := ldap.DialURL(cfg.LDAP.URL)
 	if err != nil {
 		return fmt.Errorf("LDAP connection failed: %w", err)
 	}
 	defer conn.Close()
 
-	// Authenticate
 	if err := conn.Bind(
 		cfg.LDAP.Username,
 		cfg.LDAP.Password,
@@ -26,10 +28,11 @@ func Dump(cfg *config.Config) error {
 
 	fmt.Println("LDAP bind successful")
 
-	// Create output file
 	file, err := os.Create(cfg.Output.File)
 	if err != nil {
-		return fmt.Errorf("failed to create output file: %w", err)
+		return fmt.Errorf(
+			"failed to create output file: %w",
+		)
 	}
 	defer file.Close()
 
@@ -41,14 +44,15 @@ func Dump(cfg *config.Config) error {
 	page := 0
 
 	for {
+
 		page++
 
 		searchRequest := ldap.NewSearchRequest(
 			cfg.LDAP.BaseDN,
 			ldap.ScopeWholeSubtree,
 			ldap.NeverDerefAliases,
-			0, // Size limit
-			0, // Time limit
+			0,
+			0,
 			false,
 			cfg.LDAP.Search.Filter,
 			cfg.LDAP.Search.Attributes,
@@ -71,7 +75,14 @@ func Dump(cfg *config.Config) error {
 		)
 
 		for _, entry := range result.Entries {
-			if err := writeEntry(file, entry); err != nil {
+
+			err := writeEntry(
+				file,
+				entry,
+				cfg.LDAP.LDIF.EncodeNonASCII,
+			)
+
+			if err != nil {
 				return fmt.Errorf(
 					"failed writing entry: %w",
 					err,
@@ -81,15 +92,13 @@ func Dump(cfg *config.Config) error {
 			total++
 		}
 
-		// Flush the file after every page.
 		if err := file.Sync(); err != nil {
 			return fmt.Errorf(
-				"failed to flush output file: %w",
+				"failed flushing output: %w",
 				err,
 			)
 		}
 
-		// Get the paging control returned by the server.
 		updatedControl := ldap.FindControl(
 			result.Controls,
 			ldap.ControlTypePaging,
@@ -100,18 +109,17 @@ func Dump(cfg *config.Config) error {
 		}
 
 		ctrl, ok := updatedControl.(*ldap.ControlPaging)
+
 		if !ok {
 			return fmt.Errorf(
-				"invalid LDAP paging control returned by server",
+				"invalid LDAP paging control",
 			)
 		}
 
-		// Empty cookie means there are no more results.
 		if len(ctrl.Cookie) == 0 {
 			break
 		}
 
-		// Use the cookie for the next page.
 		pagingControl.SetCookie(ctrl.Cookie)
 	}
 
@@ -123,29 +131,121 @@ func Dump(cfg *config.Config) error {
 	return nil
 }
 
-func writeEntry(file *os.File, entry *ldap.Entry) error {
-	if _, err := fmt.Fprintf(
+func writeEntry(
+	file *os.File,
+	entry *ldap.Entry,
+	encodeNonASCII bool,
+) error {
+
+	writeLDIFValue(
 		file,
-		"dn: %s\n",
-		entry.DN,
-	); err != nil {
-		return err
-	}
+		"dn",
+		[]byte(entry.DN),
+		encodeNonASCII,
+	)
 
 	for _, attr := range entry.Attributes {
-		for _, value := range attr.Values {
-			if _, err := fmt.Fprintf(
+
+		for _, value := range attr.ByteValues {
+
+			writeLDIFValue(
 				file,
-				"%s: %s\n",
 				attr.Name,
 				value,
-			); err != nil {
-				return err
+				encodeNonASCII,
+			)
+		}
+	}
+
+	fmt.Fprintln(file)
+
+	return nil
+}
+
+func writeLDIFValue(
+	file *os.File,
+	name string,
+	value []byte,
+	encodeNonASCII bool,
+) {
+
+	if needsBase64(
+		value,
+		encodeNonASCII,
+	) {
+
+		fmt.Fprintf(
+			file,
+			"%s:: %s\n",
+			name,
+			base64.StdEncoding.EncodeToString(value),
+		)
+
+		return
+	}
+
+	fmt.Fprintf(
+		file,
+		"%s: %s\n",
+		name,
+		string(value),
+	)
+}
+
+func needsBase64(
+	value []byte,
+	encodeNonASCII bool,
+) bool {
+
+	if len(value) == 0 {
+		return false
+	}
+
+	// Invalid UTF-8
+	if !utf8.Valid(value) {
+		return true
+	}
+
+	// Optional policy:
+	// encode Chinese/Japanese/Korean/etc.
+	if encodeNonASCII {
+
+		for _, r := range string(value) {
+
+			if r > 127 {
+				return true
 			}
 		}
 	}
 
-	_, err := fmt.Fprintln(file)
+	// LDIF SAFE-INIT restrictions
+	switch value[0] {
 
-	return err
+	case ' ', ':', '<':
+		return true
+	}
+
+	// Unsafe control characters
+	for _, b := range value {
+
+		switch b {
+
+		case 0x00: // NULL
+			return true
+
+		case 0x0A: // LF
+			return true
+
+		case 0x0D: // CR
+			return true
+		}
+	}
+
+	// Recommended by LDIF spec
+	// encode trailing spaces
+	if value[len(value)-1] == ' ' {
+		return true
+	}
+
+	return false
 }

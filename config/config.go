@@ -17,6 +17,7 @@ type LDAPConfig struct {
 	Password string       `yaml:"password"`
 	BaseDN   string       `yaml:"base_dn"`
 	Search   SearchConfig `yaml:"search"`
+	LDIF     LDIFConfig   `yaml:"ldif"`
 }
 
 type SearchConfig struct {
@@ -27,6 +28,10 @@ type SearchConfig struct {
 
 type OutputConfig struct {
 	File string `yaml:"file"`
+}
+
+type LDIFConfig struct {
+	EncodeNonASCII bool `yaml:"encode_non_ascii"`
 }
 
 func Load(filename string) (*Config, error) {

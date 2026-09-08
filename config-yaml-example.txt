@@ -10,5 +10,9 @@ ldap:
     attributes:
       - "*"
 
+  ldif:
+    encode_non_ascii: true
+
+
 output:
   file: "ldap_dump.ldif"

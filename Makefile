@@ -26,7 +26,7 @@ build:
 	@echo "Tag:     $(GIT_TAG)"
 	@echo "Commit:  $(GIT_COMMIT)"
 	@echo "Built:   $(BUILD_TIME)"
-	go build \
+	CGO_ENABLED=0 go build \
 		-trimpath \
 		-ldflags "$(LDFLAGS)" \
 		-o $(BUILD_DIR)/$(BINARY)-$(VERSION) \
