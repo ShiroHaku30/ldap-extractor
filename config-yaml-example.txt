@@ -2,10 +2,10 @@ ldap:
   url: "ldap://<ip>:389"
   username: "username"
   password: "passwd"
-  base_dn: "dc=<example>,dc=com"
+  base_dn: "dc=example,dc=com"
 
   search:
-    filter: "(objectClass=*)"
+    filter: "(objectCategory=person)"
     page_size: 1000
     attributes:
       - "*"
@@ -15,4 +15,15 @@ ldap:
 
 
 output:
-  file: "ldap_dump.ldif"
+  # Raw dump
+  file: "/var/lib/ldap-extractor/ldap_dump.ldif"
+
+  filter:
+    directory: "/var/lib/ldap-extractor/filtered"
+    suffix: "filtered.json"
+    retention: 30
+
+  diff:
+    directory: "/var/lib/ldap-extractor/diff"
+    suffix: "diff.json"
+    retention: 90
