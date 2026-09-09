@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"os"
+	"path/filepath"
 
 	"github.com/go-ldap/ldif"
 )
@@ -82,7 +83,17 @@ func ExportJSON(
 		users = append(users, user)
 	}
 
+	dir := filepath.Dir(output)
+
+	if err := os.MkdirAll(
+		dir,
+		0755,
+	); err != nil {
+		return err
+	}
+
 	out, err := os.Create(output)
+
 	if err != nil {
 		return err
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"path/filepath"
 	"unicode/utf8"
 
 	"github.com/go-ldap/ldap/v3"
@@ -28,10 +29,20 @@ func Dump(cfg *config.Config) error {
 
 	fmt.Println("LDAP bind successful")
 
+	dir := filepath.Dir(cfg.Output.File)
+
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf(
+			"failed to create output directory: %w",
+			err,
+		)
+	}
+
 	file, err := os.Create(cfg.Output.File)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to create output file: %w",
+			err,
 		)
 	}
 	defer file.Close()
