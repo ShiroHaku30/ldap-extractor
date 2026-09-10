@@ -30,3 +30,40 @@
 ```
 make build
 ```
+
+---
+
+
+# Command Usage
+
+### Dump
+
+For Dumping LDAP objects based on configured config.yaml ( testing purposes )
+
+```bash
+ldap-extractor dump -c <config.yaml>
+```
+
+### Extract
+
+For dumping, filtering, and generating diff between between latest filtered and previous filtered.
+
+```bash
+ldap-extractor extract -c <config.yaml>
+```
+
+### Filter
+
+For Filtering out LDAP users based on the dumped ldif file ( testing purposes )
+
+```bash
+ldap-extractor filter -i <ldap_dump.ldif> -o <filtered.json>
+```
+
+### Test Connection
+
+For testing the ldap connection to check if auth succeeds based on provided credentials
+
+```bash
+ldap-extractor test -c <config.yaml>
+```
