@@ -1,0 +1,8 @@
+[Unit]
+Description=LDAP Extractor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ldap-extractor extract --config /etc/ldap-extractor/config.yaml

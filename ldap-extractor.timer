@@ -1,0 +1,12 @@
+[Unit]
+Description=Run LDAP Extractor every 12 hours
+
+[Timer]
+OnCalendar=*-*-* 00:00:00
+OnCalendar=*-*-* 12:00:00
+Persistent=true
+AccuracySec=1min
+Unit=ldap-extractor.service
+
+[Install]
+WantedBy=timers.target
