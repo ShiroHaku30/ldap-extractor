@@ -13,6 +13,7 @@ DATA_DIR="/opt/ldap-extractor"
 FILTER_DIR="${DATA_DIR}/filtered"
 DIFF_DIR="${DATA_DIR}/diff"
 SYSTEM_SERVICE="/etc/systemd/system"
+SERVICE_NAME="ldap-extractor"
 
 usage() {
     cat <<EOF
@@ -71,7 +72,7 @@ find_binary() {
 install_ldap_extractor() {
 
     local binary
-
+    
     binary="$(find_binary)"
 
     echo "Found binary:"
@@ -88,11 +89,11 @@ install_ldap_extractor() {
         "${INSTALL_BIN}"
     
     install -Dm755 \
-        "${binary}.service" \
+        "${SERVICE_NAME}.service" \
         "${SYSTEM_SERVICE}"
     
     install -Dm755 \
-        "${binary}.timer" \
+        "${SERVICE_NAME}.timer" \
         "${SYSTEM_SERVICE}"
 
 
@@ -169,7 +170,7 @@ EOF
         "${FILTER_DIR}" \
         "${DIFF_DIR}"
     
-    systemctl enable --now ${binary}.timer
+    systemctl enable --now ${SERVICE_NAME}.timer
     systemctl daemon-reload
 
 
@@ -202,7 +203,6 @@ EOF
 
 uninstall_ldap_extractor() {
 
-    binary="$(find_binary)"
     service_path="/etc/systemd/system"
 
     echo "Uninstalling ldap-extractor..."
@@ -222,30 +222,30 @@ uninstall_ldap_extractor() {
 
     fi
 
-    if [[ -f "${service_path}/${binary}.service" ]]; then
+    if [[ -f "${service_path}/${SERVICE_NAME}.service" ]]; then
 
-        rm -f "${service_path}/${binary}.service"
+        rm -f "${service_path}/${SERVICE_NAME}.service"
 
         echo "Removed:"
-        echo "  ${service_path}/${binary}.service"
+        echo "  ${service_path}/${SERVICE_NAME}.service"
 
     else
 
-        echo "${binary}.service is not installed:"
-        echo "  ${service_path}/${binary}.service"
+        echo "${SERVICE_NAME}.service is not installed:"
+        echo "  ${service_path}/${SERVICE_NAME}.service"
     fi
 
-    if [[ -f "${service_path}/${binary}.timer" ]]; then
+    if [[ -f "${service_path}/${SERVICE_NAME}.timer" ]]; then
 
-        rm -f "${service_path}/${binary}.timer"
+        rm -f "${service_path}/${SERVICE_NAME}.timer"
 
         echo "Removed:"
-        echo "  ${service_path}/${binary}.timer"
+        echo "  ${service_path}/${SERVICE_NAME}.timer"
 
     else
 
-        echo "${binary}.timer is not installed:"
-        echo "  ${service_path}/${binary}.timer"
+        echo "${SERVICE_NAME}.timer is not installed:"
+        echo "  ${service_path}/${SERVICE_NAME}.timer"
     fi
 
     echo
