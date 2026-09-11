@@ -20,6 +20,7 @@ var filterCmd = &cobra.Command{
 			"sAMAccountName",
 			"department",
 			"employeeID",
+			"title",
 		}
 
 		return filter.ExportJSON(
