@@ -75,3 +75,4 @@ version:
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf $(PACKAGE_DIR)
