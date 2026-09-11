@@ -13,6 +13,7 @@ type User struct {
 	SAMAccountName string `json:"sAMAccountName"`
 	Department     string `json:"department"`
 	EmployeeID     string `json:"employeeID"`
+	Title          string `json:"title"`
 }
 
 type Attribute struct {
@@ -72,6 +73,11 @@ func ExportJSON(
 
 			EmployeeID: entry.GetAttributeValue(
 				"employeeID",
+			),
+
+			Title: encodeJSONValue(
+				entry.GetAttributeValue("title"),
+				true,
 			),
 		}
 
