@@ -54,21 +54,21 @@ func Dump(cfg *config.Config) error {
 	total := 0
 	page := 0
 
+	searchRequest := ldap.NewSearchRequest(
+		cfg.LDAP.BaseDN,
+		ldap.ScopeWholeSubtree,
+		ldap.NeverDerefAliases,
+		0,
+		0,
+		false,
+		cfg.LDAP.Search.Filter,
+		cfg.LDAP.Search.Attributes,
+		[]ldap.Control{pagingControl},
+	)
+
 	for {
 
 		page++
-
-		searchRequest := ldap.NewSearchRequest(
-			cfg.LDAP.BaseDN,
-			ldap.ScopeWholeSubtree,
-			ldap.NeverDerefAliases,
-			0,
-			0,
-			false,
-			cfg.LDAP.Search.Filter,
-			cfg.LDAP.Search.Attributes,
-			[]ldap.Control{pagingControl},
-		)
 
 		result, err := conn.Search(searchRequest)
 		if err != nil {

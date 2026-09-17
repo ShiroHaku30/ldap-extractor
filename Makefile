@@ -48,10 +48,10 @@ package: build
 	cp install.sh \
 		$(PACKAGE_DIR)/$(BINARY)-$(VERSION)/
 	
-	cp ${BINARY}.service \
+	cp $(BINARY).service \
 		$(PACKAGE_DIR)/$(BINARY)-$(VERSION)/
 	
-	cp ${BINARY}.timer \
+	cp $(BINARY).timer \
 		$(PACKAGE_DIR)/$(BINARY)-$(VERSION)/
 
 	tar -C $(PACKAGE_DIR) \
