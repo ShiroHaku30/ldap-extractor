@@ -88,11 +88,11 @@ install_ldap_extractor() {
         "${binary}" \
         "${INSTALL_BIN}"
     
-    install -Dm755 \
+    install -Dm644 \
         "${SERVICE_NAME}.service" \
         "${SYSTEM_SERVICE}"
     
-    install -Dm755 \
+    install -Dm644 \
         "${SERVICE_NAME}.timer" \
         "${SYSTEM_SERVICE}"
 
