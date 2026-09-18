@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -15,6 +16,17 @@ type User struct {
 	Title             string `json:"title"`
 	Manager           string `json:"manager"`
 	ManagerEmployeeID string `json:"managerEmployeeID"`
+}
+
+func encodeJSONValue(value string, encode bool) string {
+
+	if !encode {
+		return value
+	}
+
+	return base64.StdEncoding.EncodeToString(
+		[]byte(value),
+	)
 }
 
 func ExportJSON(
@@ -68,16 +80,18 @@ func ExportJSON(
 				"sAMAccountName",
 			),
 
-			Department: entry.GetAttributeValue(
-				"department",
+			Department: encodeJSONValue(
+				entry.GetAttributeValue("department"),
+				true,
 			),
 
 			EmployeeID: entry.GetAttributeValue(
 				"employeeID",
 			),
 
-			Title: entry.GetAttributeValue(
-				"title",
+			Title: encodeJSONValue(
+				entry.GetAttributeValue("title"),
+				true,
 			),
 		}
 
