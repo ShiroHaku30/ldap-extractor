@@ -5,16 +5,21 @@ import (
 	"os"
 )
 
-type User map[string]any
+type User struct {
+	SAMAccountName    string `json:"sAMAccountName"`
+	Department        string `json:"department"`
+	EmployeeID        string `json:"employeeID"`
+	Title             string `json:"title"`
+	Manager           string `json:"manager"`
+	ManagerEmployeeID string `json:"managerEmployeeID"`
+}
 
 type Change struct {
 	Type string `json:"type"`
+	Key  string `json:"key"`
 
-	Key string `json:"key"`
-
-	Old User `json:"old,omitempty"`
-
-	New User `json:"new,omitempty"`
+	Old *User `json:"old,omitempty"`
+	New *User `json:"new,omitempty"`
 }
 
 func Generate(
@@ -24,13 +29,11 @@ func Generate(
 ) error {
 
 	oldUsers, err := loadJSON(oldFile)
-
 	if err != nil {
 		return err
 	}
 
 	newUsers, err := loadJSON(newFile)
-
 	if err != nil {
 		return err
 	}
@@ -41,7 +44,6 @@ func Generate(
 	)
 
 	out, err := os.Create(output)
-
 	if err != nil {
 		return err
 	}
@@ -59,7 +61,6 @@ func loadJSON(
 ) (map[string]User, error) {
 
 	data, err := os.ReadFile(filename)
-
 	if err != nil {
 		return nil, err
 	}
@@ -77,13 +78,11 @@ func loadJSON(
 
 	for _, user := range users {
 
-		username, ok := user["sAMAccountName"].(string)
-
-		if !ok || username == "" {
+		if user.SAMAccountName == "" {
 			continue
 		}
 
-		result[username] = user
+		result[user.SAMAccountName] = user
 	}
 
 	return result, nil
@@ -96,8 +95,7 @@ func compare(
 
 	changes := make([]Change, 0)
 
-	// Added or modified users
-
+	// Added or modified users.
 	for username, newUser := range current {
 
 		oldUser, exists := old[username]
@@ -109,32 +107,28 @@ func compare(
 				Change{
 					Type: "added",
 					Key:  username,
-					New:  newUser,
+					New:  &newUser,
 				},
 			)
 
 			continue
 		}
 
-		if !equal(
-			oldUser,
-			newUser,
-		) {
+		if oldUser != newUser {
 
 			changes = append(
 				changes,
 				Change{
 					Type: "modified",
 					Key:  username,
-					Old:  oldUser,
-					New:  newUser,
+					Old:  &oldUser,
+					New:  &newUser,
 				},
 			)
 		}
 	}
 
-	// Removed users
-
+	// Removed users.
 	for username, oldUser := range old {
 
 		if _, exists := current[username]; !exists {
@@ -144,23 +138,11 @@ func compare(
 				Change{
 					Type: "removed",
 					Key:  username,
-					Old:  oldUser,
+					Old:  &oldUser,
 				},
 			)
 		}
 	}
 
 	return changes
-}
-
-func equal(
-	a User,
-	b User,
-) bool {
-
-	aJSON, _ := json.Marshal(a)
-
-	bJSON, _ := json.Marshal(b)
-
-	return string(aJSON) == string(bJSON)
 }
